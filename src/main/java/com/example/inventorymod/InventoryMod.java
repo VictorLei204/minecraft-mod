@@ -22,6 +22,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.SlotItemHandler;
@@ -44,12 +45,16 @@ public class InventoryMod {
     // Flag to track when the key was pressed (client side)
     private static final AtomicBoolean transferRequested = new AtomicBoolean(false);
 
-    public InventoryMod(IEventBus modEventBus) {
-        // Register mod lifecycle events using constructor parameter
+    // Default constructor required by Forge
+    public InventoryMod() {
+        // Get the mod event bus directly from FMLJavaModLoadingContext
+        // Use get() even though it's deprecated since there's no alternative in 1.21.5
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        
+        // Register mod lifecycle events
         modEventBus.addListener(this::commonSetup);
         
-        // Don't call Config.init() - we don't need it anymore
-        // Instead, register directly with the current ModContainer
+        // Register the configuration with the current ModContainer
         ModList.get().getModContainerById("inventorymod").ifPresent(
             container -> ((ModContainer)container).addConfig(new ModConfig(
                 ModConfig.Type.COMMON, 
@@ -136,6 +141,7 @@ public class InventoryMod {
                 // If we found a valid inventory handler for the container
                 if (targetHandler != null) {
                     player.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(playerInventoryHandler -> {
+                        // Define playerInvSlots here inside the lambda
                         int playerInvSlots = 36; // Standard inventory size (hotbar + main inventory)
                         boolean transferred = false;
 
